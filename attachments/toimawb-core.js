@@ -598,3 +598,7 @@ TOI.MAIN.start = function() {
 
 
 TOI.MAIN.start();
+
+
+
+window.scrollTo(0,1);
