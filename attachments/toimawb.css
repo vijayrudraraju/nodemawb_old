@@ -1,11 +1,13 @@
 /* global elements */
-body, div{padding:0px;margin:0px;border:0px}
 html{-webkit-tap-highlight-color:rgba(0,0,0,0);padding:0px;margin:0px;border:0px;width:240px}
-button{font-family:sans-serif;font-style:normal;font-weight:400;padding:0px;margin:0px}
-textarea{font-size:35px;font-family:sans-serif;font-style:normal;font-weight:400;width:578px;height:214px;margin-top:20px;padding:10px;resize:none}
+body, div{padding:0px;margin:0px;border:0px}
+
 h1{font-size:60px;font-family:sans-serif;font-style:normal;font-weight:400;padding:0px;margin:0px;border:0px}
 h2{font-size:30px;font-family:sans-serif;font-style:normal;font-weight:400;padding:0px;margin:0px;border:0px}
 p{word-wrap:break-word;margin:0}
+
+button{font-family:sans-serif;font-style:normal;font-weight:400;padding:0px;margin:0px}
+textarea{font-size:35px;font-family:sans-serif;font-style:normal;font-weight:400;width:578px;height:214px;margin-top:20px;padding:10px;resize:none}
     
 
 
@@ -22,22 +24,32 @@ p{word-wrap:break-word;margin:0}
 
 
 /* frame elements */
-.marker{position:absolute;border-radius:53px;-moz-border-radius:53px;-webkit-border-radius:53px;background:white;border:1px dashed black}
-.option.one{background:black;border:1px solid white}
-.option.two{background:blue;border:1px solid white}
-.option.three{background:green;border:1px solid white}
-.frame-obj{padding:10px}
+.marker{position:absolute;border-radius:53px;-moz-border-radius:53px;-webkit-border-radius:53px;background:black;border:1px dashed white;text-align:center;color:white}
+.inner-marker{border-radius:53px;-moz-border-radius:53px;-webkit-border-radius:53px;background:white;border:1px dashed black}
+
+.option.one{background:red;border:1px dashed black}
+.option.two{background:green;border:1px dashed black}
+.option.three{background:blue;border:1px dashed black}
+.option > p{padding-top:14px}
+
+.frame-obj{padding:1px 3px 7px 5px}
+.inner-frame-obj{padding:3px}
 
 
 
 /* paragraph elements */
-.letter{position:absolute;background:LightGreen;border:1px solid LightGreen;text-align:center;font-size:36px}
-.word{position:absolute;background:LightBlue;border:1px solid LightBlue;text-align:center;font-size:18px}
-.paragraph{position:absolute;background:LightPink;border:1px solid LightPink;font-size:14px}
+.letter{position:absolute;background:#500;border:1px solid black;text-align:center;font-size:36px;color:#eee}
+.inner-letter{background:#910000}
+
+.word{position:absolute;background:#050;border:1px solid black;text-align:center;font-size:18px;color:#eee}
+.inner-word{background:#009100}
+
+.paragraph{position:absolute;background:#005;border:1px solid black;font-size:14px;color:#eee}
+.inner-paragraph{background:#000091}
 
 
 
 /* marking classes */
 .red{color:red}
-.blue{background:blue}
 .green{background:green}
+.blue{background:blue}

@@ -354,11 +354,15 @@ TOI.MAIN.data = TOI.DATA.DOCS;
 
 
 TOI.MAIN.initDom = function() {
+    var arr = [];
     for (var i=0;i<9;i++) {
         this.divArr[i] = document.createElement('div');
+        arr[i] = document.createElement('div');
         this.pArr[i] = document.createElement('p');
-        this.divArr[i].appendChild(this.pArr[i]);
+        this.divArr[i].appendChild(arr[i]);
+        arr[i].appendChild(this.pArr[i]);
     }
+
     this.stackArr.push(document.createElement('p'));
     this.stack.appendChild(this.stackArr[0]);
 };
@@ -383,30 +387,50 @@ TOI.MAIN.start = function() {
 
 
     function setType(el, type) {
-        var padding = 2+20;
+        console.log('setType',el.childNodes[0]);
+        var padding = 2+8;
+        var innerEl = el.childNodes[0];
+        var innerPadding = 6;
         switch(type) {
             case 'marker':
                 el.style.width = cellWidth-padding+'px';
                 el.style.height = cellHeight-padding+'px';
                 el.className = 'marker';
+
+                innerEl.style.width = cellWidth-padding-innerPadding+'px';
+                innerEl.style.height = cellHeight-padding-innerPadding+'px';
+                innerEl.className = 'inner-marker';
                 break;
             case 'paragraph':
                 el.style.width = cellWidth*2-padding+'px';
                 el.style.height = cellHeight*2-padding+'px';
                 el.className = 'paragraph';
+
+                innerEl.style.width = cellWidth*2-padding-innerPadding+'px';
+                innerEl.style.height = cellHeight*2-padding-innerPadding+'px';
+                innerEl.className = 'inner-paragraph';
                 break;
             case 'word':
                 el.style.width = cellWidth*2-padding+'px';
                 el.style.height = cellHeight-padding+'px';
                 el.className = 'word';
+
+                innerEl.style.width = cellWidth*2-padding-innerPadding+'px';
+                innerEl.style.height = cellHeight-padding-innerPadding+'px';
+                innerEl.className = 'inner-word';
                 break;
             case 'letter':
                 el.style.width = cellWidth-padding+'px';
                 el.style.height = cellHeight-padding+'px';
                 el.className = 'letter';
+
+                innerEl.style.width = cellWidth-padding-innerPadding+'px';
+                innerEl.style.height = cellHeight-padding-innerPadding+'px';
+                innerEl.className = 'inner-letter';
                 break;
         }
         el.className += ' frame-obj';
+        innerEl.className += ' inner-frame-obj';
     }
     function setPos(el, index) {
         el.style.left = pos[index].x+'px';
@@ -450,7 +474,12 @@ TOI.MAIN.start = function() {
         if (el === undefined) {
             return;
         }
-        el.className = 'frame-obj marker option one';
+        el.className = 'frame-obj marker';
+
+        var innerEl = el.childNodes[0];
+        innerEl.className = 'inner-frame-obj inner-marker option one';
+
+        setText(innerEl.childNodes[0],'#');
 
         TOI.STATE.sequence += str.replace(/,/g,' ');
         setStack(TOI.STATE.sequence);
@@ -460,7 +489,12 @@ TOI.MAIN.start = function() {
         if (el === undefined) {
             return;
         }
-        el.className = 'frame-obj marker option two';
+        el.className = 'frame-obj marker';
+
+        var innerEl = el.childNodes[0];
+        innerEl.className = 'inner-frame-obj inner-marker option two';
+
+        setText(innerEl.childNodes[0],'_');
 
         TOI.STATE.sequence += ' '+str.replace(/,/g,' ');
         setStack(TOI.STATE.sequence);
@@ -470,7 +504,12 @@ TOI.MAIN.start = function() {
         if (el === undefined) {
             return;
         }
-        el.className = 'frame-obj marker option three';
+        el.className = 'frame-obj marker';
+
+        var innerEl = el.childNodes[0];
+        innerEl.className = 'inner-frame-obj inner-marker option three';
+
+        setText(innerEl.childNodes[0],'.');
 
         TOI.STATE.sequence += '<br>'+str.replace(/,/g,' ');
         setStack(TOI.STATE.sequence);
@@ -478,6 +517,9 @@ TOI.MAIN.start = function() {
     var unsetTypeWrite = function(str) {
         var el = document.getElementsByClassName('marker')[0];
         el.className = 'frame-obj marker';
+
+        var innerEl = el.childNodes[0];
+        innerEl.className = 'inner-frame-obj inner-marker';
 
         setStack(TOI.STATE.sequence+'<span class="red">'+str.replace(/,/g,' ')+'</span>');
     };
@@ -558,18 +600,18 @@ TOI.MAIN.start = function() {
         // calculate index based on position
         var index = x+(3*y);
         var lastIndex = getIndex();
-        var pointer = that.divArr[TOI.CONFIG.posMappings[lastIndex][index][0]].childNodes[0].innerHTML.replace(/ /g,','); 
+        var pointer = that.divArr[TOI.CONFIG.posMappings[lastIndex][index][0]].childNodes[0].childNodes[0].innerHTML.replace(/ /g,','); 
 
         if (index !== lastIndex) {
             setContext(index, pointer);
             setStack(TOI.STATE.sequence+'<span class="red">'+pointer.replace(/,/g,' ')+'</span>');
         } else {
-            if (document.getElementsByClassName('marker option').length === 0) {
+            if (document.getElementsByClassName('inner-marker option').length === 0) {
                 setTypeWrite(pointer);      
-            } else if (document.getElementsByClassName('marker option one').length > 0) {
+            } else if (document.getElementsByClassName('inner-marker option one').length > 0) {
                 whiteoutType(pointer);
                 setSpaceTypeWrite(pointer);      
-            } else if (document.getElementsByClassName('marker option two').length > 0) {
+            } else if (document.getElementsByClassName('inner-marker option two').length > 0) {
                 whiteoutType(pointer);
                 setLineTypeWrite(pointer);      
             } else {
