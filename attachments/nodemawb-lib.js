@@ -71,7 +71,7 @@ Toi.modules.dom = function(box) {
         faceCellPos = new Array();
 
     function forEachFaceItem(arr,rows,cols,func) {
-        console.log('forEachFaceItem',arr,func);
+        //console.log('forEachFaceItem',arr,func);
         for (var i=0;i<rows;i++) {
             for (var j=0;j<cols;j++) {
                 func(arr[(i*cols)+j],i,j,(i*cols)+j,arr);
@@ -97,7 +97,7 @@ Toi.modules.dom = function(box) {
     };
     box.clearFace = function() {
         for (var i=0;i<faceObjArr.length;i++) {
-            this.clearFaceObj(faceObjArr[i]);
+            this.clearFaceObjPos(faceObjArr[i]);
             this.clearFaceObjText(faceObjTextArr[i]);
         }
     };
@@ -118,7 +118,7 @@ Toi.modules.dom = function(box) {
         forEachFaceItem(faceObjArr,numRows,numCols,
                 function(item,row,col,calcIndex) {
                     // calc correspondance b/w cells and objs
-                    box.setFaceObj(item,calcIndex*(objWidth/cellWidth));
+                    box.setFaceObjPos(item,calcIndex*(objWidth/cellWidth));
                 });
     };
     box.updateFace = function(xIn,yIn) {
@@ -137,17 +137,16 @@ Toi.modules.dom = function(box) {
         el.innerHTML = '';
     };
 
-    box.setFaceObj = function(el, cellIndex) {
-        //console.log('faceCellPos[cellIndex]',cellIndex,faceCellPos[cellIndex]);
+    box.setFaceObjPos = function(el, cellIndex) {
         el.style.left = faceCellPos[cellIndex].x+'px';
         el.style.top = faceCellPos[cellIndex].y+'px';
         el.style.display = 'block';
     };
-    box.clearFaceObj = function(el) {
+    box.clearFaceObjPos = function(el) {
         el.style.left = 0;
         el.style.top = 0;
         el.style.display = 'none';
-    }
+    };
 
     box.setFaceType = function(type) {
         typePtr = type;
@@ -161,17 +160,17 @@ Toi.modules.dom = function(box) {
 
         console.log('box.setFaceType',typePtr,faceObjArr,faceTypes,numCols,numRows);
 
+        /* set sizes of face objs */
         forEachFaceItem(faceObjArr,numRows,numCols,
                 function(item) {
-                    console.log(item);
                     item.style.width = objWidth-padding+'px';
                     item.style.height = objHeight-padding+'px';
                     item.className = type+' face-obj';
                 });
         forEachFaceItem(faceObjTextArr,numRows,numCols,
                 function(item) {
-                    item.style.width = cellWidth-padding-innerPadding+'px';
-                    item.style.height = cellHeight-padding-innerPadding+'px';
+                    item.style.width = objWidth-padding-innerPadding+'px';
+                    item.style.height = objHeight-padding-innerPadding+'px';
                     item.className = 'inner-'+type+' inner-face-obj';
                 });
     };
@@ -245,8 +244,8 @@ Toi.modules.process = function(box) {
     box.calcNeighborhoods = function(docs) {
         var that = this;
 
-        var LETTERHOODSIZE = 8;
-        var WORDHOODSIZE = 3;
+        var LETTERHOODSIZE = 9;
+        var WORDHOODSIZE = 6;
         var PARAGRAPHHOODSIZE = 1;
 
         _.each(docs, function(atom, i, list) {
@@ -414,330 +413,3 @@ Toi('*', function(box) {
     // initial state
     setContext('toimawb');
 });
-
-//!TOI.MAIN.body = document.getElementById('app-bdy'); 
-//!TOI.MAIN.frame = document.getElementById('app-frm'); 
-//!TOI.MAIN.stack = document.getElementById('app-lttr-stck'); 
-//TOI.MAIN.data = TOI.DATA.DOCS;
-
-
-
-/*
-TOI.MAIN.initDom = function() {
-    var arr = [];
-    for (var i=0;i<9;i++) {
-        this.divArr[i] = document.createElement('div');
-        arr[i] = document.createElement('div');
-        this.pArr[i] = document.createElement('p');
-        this.divArr[i].appendChild(arr[i]);
-        arr[i].appendChild(this.pArr[i]);
-    }
-
-    this.stackArr.push(document.createElement('p'));
-    this.stack.appendChild(this.stackArr[0]);
-};
-TOI.MAIN.start = function() {
-    var that = this;
-
-
-
-    this.initDom();
-        
-
-
-    var cellNumber = 3;
-    var cellWidth = this.frame.offsetWidth/cellNumber;
-    var cellHeight = this.frame.offsetHeight/cellNumber;
-    var pos = [
-    {x:0,y:0},{x:cellWidth,y:0},{x:cellWidth*2,y:0},
-    {x:0,y:cellHeight},{x:cellWidth,y:cellHeight},{x:cellWidth*2,y:cellHeight},
-    {x:0,y:cellHeight*2},{x:cellWidth,y:cellHeight*2},{x:cellWidth*2,y:cellHeight*2},
-    ];
-
-
-
-    function setType(el, type) {
-        console.log('setType',el.childNodes[0]);
-        var padding = 2+8;
-        var innerEl = el.childNodes[0];
-        var innerPadding = 6;
-        switch(type) {
-            case 'marker':
-                el.style.width = cellWidth-padding+'px';
-                el.style.height = cellHeight-padding+'px';
-                el.className = 'marker';
-
-                innerEl.style.width = cellWidth-padding-innerPadding+'px';
-                innerEl.style.height = cellHeight-padding-innerPadding+'px';
-                innerEl.className = 'inner-marker';
-                break;
-            case 'paragraph':
-                el.style.width = cellWidth*2-padding+'px';
-                el.style.height = cellHeight*2-padding+'px';
-                el.className = 'paragraph';
-
-                innerEl.style.width = cellWidth*2-padding-innerPadding+'px';
-                innerEl.style.height = cellHeight*2-padding-innerPadding+'px';
-                innerEl.className = 'inner-paragraph';
-                break;
-            case 'word':
-                el.style.width = cellWidth*2-padding+'px';
-                el.style.height = cellHeight-padding+'px';
-                el.className = 'word';
-
-                innerEl.style.width = cellWidth*2-padding-innerPadding+'px';
-                innerEl.style.height = cellHeight-padding-innerPadding+'px';
-                innerEl.className = 'inner-word';
-                break;
-            case 'letter':
-                el.style.width = cellWidth-padding+'px';
-                el.style.height = cellHeight-padding+'px';
-                el.className = 'letter';
-
-                innerEl.style.width = cellWidth-padding-innerPadding+'px';
-                innerEl.style.height = cellHeight-padding-innerPadding+'px';
-                innerEl.className = 'inner-letter';
-                break;
-        }
-        el.className += ' frame-obj';
-        innerEl.className += ' inner-frame-obj';
-    }
-    function setPos(el, index) {
-        el.style.left = pos[index].x+'px';
-        el.style.top = pos[index].y+'px';
-        that.frame.appendChild(el);
-    }
-
-
-
-    function setText(el, text, invisible) {
-        if (invisible) {
-            el.style.display = 'none';
-        } else {
-            el.style.display = 'block';
-        }
-        el.innerHTML = text;
-    }
-
-
-
-    var getPointer = function() {
-        return TOI.STATE.pointer;
-    };
-    var setPointer = function(str) {
-        TOI.STATE.pointer = str;
-    };
-
-    var getView = function() {
-        return TOI.STATE.view;
-    };
-    var setView = function(num) {
-        TOI.STATE.view = num;
-        
-        var el = document.getElementsByClassName('marker')[0];
-        el.className = 'frame-obj marker';
-        var innerEl = el.childNodes[0];
-        switch (num) {
-            case 0:
-                innerEl.className = 'inner-frame-obj inner-marker';
-                break;
-            case 1:
-                innerEl.className = 'inner-frame-obj inner-marker option one';
-                break;
-            case 2:
-                innerEl.className = 'inner-frame-obj inner-marker option two';
-                break;
-            case 3:
-                innerEl.className = 'inner-frame-obj inner-marker option three';
-                break;
-        }
-    };
-
-    var getIndex = function() {
-        return TOI.STATE.index;
-    };
-    var setIndex = function(num) {
-        TOI.STATE.index = num;
-    };
-
-    var setStack = function(str) {
-        TOI.MAIN.stackArr[0].innerHTML = str;
-    };
-
-
-
-    var setTypeWrite = function(str) {
-        var el = document.getElementsByClassName('marker')[0];
-        if (el === undefined) {
-            return;
-        }
-        el.className = 'frame-obj marker';
-
-        var innerEl = el.childNodes[0];
-        innerEl.className = 'inner-frame-obj inner-marker option one';
-
-        //setText(innerEl.childNodes[0],'#');
-
-        TOI.STATE.sequence += str.replace(/,/g,' ');
-        setStack(TOI.STATE.sequence);
-    };
-    var setSpaceTypeWrite = function(str) {
-        var el = document.getElementsByClassName('marker')[0];
-        if (el === undefined) {
-            return;
-        }
-        el.className = 'frame-obj marker';
-
-        var innerEl = el.childNodes[0];
-        innerEl.className = 'inner-frame-obj inner-marker option two';
-
-        //setText(innerEl.childNodes[0],'_');
-
-        TOI.STATE.sequence += ' '+str.replace(/,/g,' ');
-        setStack(TOI.STATE.sequence);
-    };
-    var setLineTypeWrite = function(str) {
-        var el = document.getElementsByClassName('marker')[0];
-        if (el === undefined) {
-            return;
-        }
-        el.className = 'frame-obj marker';
-
-        var innerEl = el.childNodes[0];
-        innerEl.className = 'inner-frame-obj inner-marker option three';
-
-        //setText(innerEl.childNodes[2],'.');
-
-        TOI.STATE.sequence += '<br>'+str.replace(/,/g,' ');
-        setStack(TOI.STATE.sequence);
-    };
-    var unsetTypeWrite = function(str) {
-        var el = document.getElementsByClassName('marker')[0];
-        el.className = 'frame-obj marker';
-
-        var innerEl = el.childNodes[0];
-        innerEl.className = 'inner-frame-obj inner-marker';
-
-        setStack(TOI.STATE.sequence+'<span class="red">'+str.replace(/,/g,' ')+'</span>');
-    };
-    var whiteoutType = function(str) {
-        console.log('before','whiteoutType',TOI.STATE.sequence);
-
-        // trim last atom
-        var i = TOI.STATE.sequence.lastIndexOf(str.replace(/,/g,' '));
-        if (i !== -1) {
-            TOI.STATE.sequence = TOI.STATE.sequence.slice(0, i);
-        }
-
-        // trim space
-        TOI.STATE.sequence = TOI.STATE.sequence.trim();
-
-        // trim line break
-        var j = TOI.STATE.sequence.lastIndexOf('<br>');
-        if (j !== -1 && j >= TOI.STATE.sequence.length-4) {
-            TOI.STATE.sequence = TOI.STATE.sequence.slice(0, j);
-        }
-
-        console.log('after','whiteoutType',TOI.STATE.sequence);
-    };
-
-
-
-    function setFrame(index) {
-        var letterCount = 0;
-        var wordCount = 0;
-        var paragraphCount = 0;
-
-        var frameConfig = TOI.CONFIG.frameConfigs[((TOI.STATE.view+1)*9)+index];
-        var pointer = getPointer();
-
-        clearFrame();
-
-        for (var i=0;i<frameConfig.length;i++) {
-            setType(that.divArr[i],frameConfig[i][0]);             
-
-            if (frameConfig[i][0] === 'letter') {
-                setText(that.pArr[i],that.data[pointer]['letterhood'][letterCount]);
-                letterCount++;
-            } else if (frameConfig[i][0] === 'word') {
-                setText(that.pArr[i],that.data[pointer]['wordhood'][wordCount]);
-                wordCount++;
-            } else if (frameConfig[i][0] === 'paragraph') {
-                setText(that.pArr[i],that.data[pointer]['paragraphhood'][paragraphCount].replace(/,/g,' '));
-                paragraphCount++;
-            } else if (frameConfig[i][0] === 'marker') {
-                setText(that.pArr[i],pointer.replace(/,/g,' '),true);
-            }
-
-            setPos(that.divArr[i],frameConfig[i][1]);
-        }
-
-        setIndex(index);
-    }
-    function clearText(el) {
-        el.innerHTML = '';
-    }
-    function clearFrame() {
-        that.frame.innerHTML = '';
-        for (var i=0;i<that.pArr.length;i++) {
-            clearText(that.pArr[i]);
-        }
-    }
-
-
-    var frameMouseClickFunc = function(ev) {
-        console.log(ev);
-        updateFrame(ev.position[0].x,ev.position[0].y);
-    };
-    var frameMouseMoveFunc = function(ev) {
-        updateFrame(ev.x,ev.y);
-    };
-    var updateFrame = function(xIn,yIn) {
-        // figure out position from mousePosition
-        var x = Math.floor((xIn-that.frame.offsetLeft+that.body.scrollLeft) / cellWidth);
-        var y = Math.floor((yIn-that.frame.offsetTop+that.body.scrollTop) / cellHeight);
-
-        // calculate index based on position
-        var index = x+(3*y);
-        var lastIndex = getIndex();
-        var pointer = that.divArr[TOI.CONFIG.posMappings[lastIndex][index][0]].childNodes[0].childNodes[0].innerHTML.replace(/ /g,','); 
-
-        if (index !== lastIndex) {
-            setContext(index, pointer);
-            setStack(TOI.STATE.sequence+'<span class="red">'+pointer.replace(/,/g,' ')+'</span>');
-        } else {
-            console.log('debug indexes', lastIndex, index, pointer);
-            var pos = TOI.CONFIG.posMappings[lastIndex][index][0];
-            console.log('debug type', pos, that.divArr[pos], pointer);
-            if (document.getElementsByClassName('inner-marker option').length === 0) {
-                setView(1);
-            } else if (document.getElementsByClassName('inner-marker option one').length > 0) {
-                setView(2);
-            } else if (document.getElementsByClassName('inner-marker option two').length > 0) {
-                setView(0);
-            }
-        }
-    };
-
-
-    //this.frame.addEventListener('mousemove', frameMouseMoveFunc);
-    //this.frame.addEventListener('click', frameMouseClickFunc);
-    var hammer = new Hammer(document.getElementById('app-frm'));
-    hammer.ontap = frameMouseClickFunc;
-
-    function setContext(index, pointer) {
-        setPointer(pointer); 
-        setFrame(index);
-    }
-
-    // initial state
-    setContext(0,'toimawb');
-    setStack('<span class="red">'+'toimawb'+'</span>');
-
-    window.scrollTo(0,1);
-};
-
-
-
-TOI.MAIN.start();
-*/
