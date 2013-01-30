@@ -1,6 +1,6 @@
 /* global elements */
 html{-webkit-tap-highlight-color:rgba(0,0,0,0);padding:0px;margin:0px;border:0px;width:240px}
-body, div{padding:0px;margin:0px;border:0px}
+body, div{padding:0px;margin:0px;border:0px;font-family:sans-serif}
 
 h1{font-size:60px;font-family:sans-serif;font-style:normal;font-weight:400;padding:0px;margin:0px;border:0px}
 h2{font-size:30px;font-family:sans-serif;font-style:normal;font-weight:400;padding:0px;margin:0px;border:0px}
@@ -15,7 +15,12 @@ textarea{font-size:35px;font-family:sans-serif;font-style:normal;font-weight:400
 .body{float:left;min-width:240px;min-height:320px}
 .frame{position:relative;clear:both;float:left;width:240px;height:240px}
 
-.stack{float:left;width:220px;height:60px;background:white;clear:both;padding:10px;font-size:16px}
+.stack{position:relative;float:left;width:220px;height:40px;background:white;clear:both;padding:10px;font-size:16px}
+#app-lttr-stck{background:#910000}
+#app-wrd-stck{background:#009100}
+#app-prgrph-stck{background:#000091}
+.left{position:absolute;left:0}
+.right{position:absolute;right:0}
 
 .sequence{float:left;width:80%;height:40px;background:black}
 .console {float:left;width:318px;height:318px;border:1px solid black}
@@ -53,3 +58,16 @@ textarea{font-size:35px;font-family:sans-serif;font-style:normal;font-weight:400
 .red{color:red}
 .green{background:green}
 .blue{background:blue}
+
+
+
+/* sketch */
+.canvas{position:relative;clear:both;float:left;width:240px;height:240px;background:white}
+.corner{position:absolute;width:30px;height:30px;background:blue}
+.corner.bottom{background:lightBlue}
+.corner p{text-align:center;margin:5px}
+.top{top:0}
+.bottom{bottom:0}
+.left{left:0}
+.right{right:0}
+.face{position:relative;width:180px;height:180px;background:blue;top:30px;left:30px}
