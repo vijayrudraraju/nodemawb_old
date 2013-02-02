@@ -1,3 +1,6 @@
+/* Layers :
+    dom -> indexing ->
+*/
 function Toi() {
     // turning arguments into an array
     var args = Array.prototype.slice.call(arguments),
@@ -54,24 +57,49 @@ Toi.prototype = {
 };
 Toi.modules = {};
 Toi.modules.dom = function(box) {
-    var face = document.getElementsByClassName('face')[0],
-        body = document.getElementsByClassName('body')[0],
-        canvas = document.getElementsByClassName('canvas')[0],
-        typePtr = 'letter',
-        faceTypes = {letter:{numCols:3,numRows:3},word:{numCols:2,numRows:3}},
-        faceObjArr = [],
-        faceObjTextArr = [],
-        maxNumCells = 18,
-        maxNumCols = 6,
-        maxNumRows = 3,
-        faceWidth = face.offsetWidth,
-        faceHeight = face.offsetHeight,
-        cellWidth = faceWidth/maxNumCols,
-        cellHeight = faceHeight/maxNumRows,
-        faceCellPos = new Array();
+    var body = document.getElementsByClassName('body')[0],
+        face = document.getElementsByClassName('face')[0],
+        miniBuffer = document.getElementsByClassName('mini-buffer')[0],
+        dom = {
+            face:{
+                     name:'face',
+                     root:face,
+                     width:face.offsetWidth,
+                     height:face.offsetHeight,
+                     cellWidth:0,
+                     cellHeight:0,
+                     currentType:'letter',
+                     types:{letter:{rows:3,cols:3},word:{rows:3,cols:2}},
+                     rows:3,
+                     cols:6,
+                     div:[],
+                     p:[],
+                     grid:[]
+                 },
+            'mini-buffer':{
+                name:'mini-buffer',
+                root:miniBuffer,
+                width:miniBuffer.offsetWidth,
+                height:miniBuffer.offsetHeight,
+                cellWidth:0,
+                cellHeight:0,
+                currentType:'letter',
+                types:{letter:{rows:1,cols:6},word:{rows:1,cols:3}},
+                rows:1,
+                cols:6,
+                div:[],
+                p:[],
+                grid:[]
+            }
+        };
 
-    function forEachFaceItem(arr,rows,cols,func) {
-        //console.log('forEachFaceItem',arr,func);
+    dom['face']['cellWidth'] = dom['face']['width']/dom['face']['cols'];
+    dom['face']['cellHeight'] = dom['face']['height']/dom['face']['rows'];
+    dom['mini-buffer']['cellWidth'] = dom['mini-buffer']['width']/dom['mini-buffer']['cols'];
+    dom['mini-buffer']['cellHeight'] = dom['mini-buffer']['height']/dom['mini-buffer']['rows'];
+
+    function forEachCell(arr,rows,cols,func) {
+        //console.log('forEachCell',arr,func);
         for (var i=0;i<rows;i++) {
             for (var j=0;j<cols;j++) {
                 func(arr[(i*cols)+j],i,j,(i*cols)+j,arr);
@@ -79,101 +107,129 @@ Toi.modules.dom = function(box) {
         }
     }
 
-    (function generateFaceCellPositions(arr) {
-        arr.length = maxNumRows*maxNumCols;
-        forEachFaceItem(arr,maxNumRows,maxNumCols,function(item,row,col,index,thisArr){
-            thisArr[index] = {x:col*cellWidth,y:row*cellHeight};
-        });
-    }(faceCellPos));
-
-    box.createFace = function() {
-        face.innerHTML = '';
-        for (var i=0;i<maxNumCells;i++) {
-            faceObjArr[i] = document.createElement('div');
-            faceObjTextArr[i] = document.createElement('p');
-            faceObjArr[i].appendChild(faceObjTextArr[i]);
-            face.appendChild(faceObjArr[i]);
+    function generateDomSet(domArrange) {
+        domArrange['root'].innerHTML = '';
+        for (var i=0;i<domArrange['rows']*domArrange['cols'];i++) {
+            domArrange['div'][i] = document.createElement('div');
+            domArrange['p'][i] = document.createElement('p');
+            domArrange['div'][i].appendChild(domArrange['p'][i]);
+            domArrange['root'].appendChild(domArrange['div'][i]);
         }
-    };
-    box.clearFace = function() {
-        for (var i=0;i<faceObjArr.length;i++) {
-            this.clearFaceObjPos(faceObjArr[i]);
-            this.clearFaceObjText(faceObjTextArr[i]);
-        }
-    };
-    box.setFace = function(pointer, data) {
-        var objCount = 0,
-            numRows = faceTypes[typePtr]['numRows'], 
-            numCols = faceTypes[typePtr]['numCols'], 
-            objWidth = faceWidth/numCols;
-
-        this.clearFace();
-
-        //console.log('box.setFace',objWidth,cellWidth);
-
-        forEachFaceItem(faceObjTextArr,numRows,numCols,
-                function(item,row,col,calcIndex) {
-                    box.setFaceObjText(item,data[pointer][typePtr+'hood'][calcIndex]);
-                });
-        forEachFaceItem(faceObjArr,numRows,numCols,
-                function(item,row,col,calcIndex) {
-                    // calc correspondance b/w cells and objs
-                    box.setFaceObjPos(item,calcIndex*(objWidth/cellWidth));
-                });
-    };
-    box.updateFace = function(xIn,yIn) {
-        // figure out position from mousePosition
-        var x = Math.floor((xIn-canvas.offsetLeft+body.scrollLeft) / cellWidth);
-        var y = Math.floor((yIn-canvas.offsetTop+body.scrollTop) / cellHeight);
-
-        // calculate index based on position
-        var index = x+(3*y);
-    };
-
-    box.setFaceObjText = function(el, text) {
-        el.innerHTML = text;
     }
-    box.clearFaceObjText = function(el) {
-        el.innerHTML = '';
-    };
+    function clearDomSet(domArrange) {
+        for (var i=0;i<domArrange['div'].length;i++) {
+            clearDiv(domArrange['div'][i]);
+            clearP(domArrange['p'][i]);
+        }
+    }
 
-    box.setFaceObjPos = function(el, cellIndex) {
-        el.style.left = faceCellPos[cellIndex].x+'px';
-        el.style.top = faceCellPos[cellIndex].y+'px';
+    function setDiv(el, x, y, name, type) {
+        //console.log('arr',arr);
+        el.style.left = x+'px';
+        el.style.top = y+'px';
         el.style.display = 'block';
-    };
-    box.clearFaceObjPos = function(el) {
+        el.className = name+'-obj '+type;
+    }
+    function clearDiv(el) {
         el.style.left = 0;
         el.style.top = 0;
         el.style.display = 'none';
+    }
+
+    function setP(el, text, name, type) {
+        el.innerHTML = text;
+        el.className = 'inner-'+name+'-obj '+type;
+    }
+    function clearP(el) {
+        el.innerHTML = '';
+    }
+
+    function populateGrid(domArrange) {
+        domArrange['grid'].length = domArrange['rows']*domArrange['cols'];
+        forEachCell(domArrange['grid'],domArrange['rows'],domArrange['cols'],function(item,row,col,index,thisArr){
+            thisArr[index] = {x:col*domArrange['cellWidth'],y:row*domArrange['cellHeight']};
+        });
+    }
+
+    function setType(domArrange,type) {
+        domArrange['currentType'] = type;
+    }
+    function setDomArrangement(domArrange, type, pointer, data) {
+        var numRows = domArrange['types'][type]['rows'], 
+            numCols = domArrange['types'][type]['cols'], 
+            objWidth = domArrange['width']/numCols,
+            objHeight = domArrange['height']/numRows;
+        //console.log(objWidth,objHeight,domArrange['cellWidth'],domArrange['cellHeight']);
+
+        clearDomSet(domArrange);
+        setType(domArrange,type);
+
+        // set positions
+        forEachCell(domArrange['div'],numRows,numCols,
+                function(item,row,col,calcIndex,thisArr) {
+                    // calc correspondance b/w cells and objs
+                    //console.log(calcIndex,objWidth/domArrange['cellWidth'],objHeight/domArrange['cellHeight']);
+                    setDiv(item,col*objWidth,row*objHeight,domArrange['name'],type);
+                });
+        // set text
+        forEachCell(domArrange['p'],numRows,numCols,
+                function(item,row,col,calcIndex) {
+                    setP(item,data[pointer][type+'hood'][calcIndex],domArrange['name'],type);
+                });
+    }
+    
+
+
+    box.initDom = function(data) {
+        populateGrid(dom['face']);
+        populateGrid(dom['mini-buffer']);
+        generateDomSet(dom['face']);
+        generateDomSet(dom['mini-buffer']);
+        setDomArrangement(dom['face'],'letter','toimawb',data);
+        setDomArrangement(dom['mini-buffer'],'letter','toimawb',data);
     };
+    box.updateDom = function(name,xIn,yIn) {
+        //console.log(name,xIn,yIn);
+        var type = dom[name]['currentType']; 
 
-    box.setFaceType = function(type) {
-        typePtr = type;
+        var numRows = dom[name]['types'][type]['rows'], 
+            numCols = dom[name]['types'][type]['cols'], 
+            objWidth = dom[name]['width']/numCols,
+            objHeight = dom[name]['height']/numRows,
+            // figure out position from mousePosition
+            x = Math.floor((xIn-dom[name]['root'].offsetLeft+body.scrollLeft) / objWidth),
+            y = Math.floor((yIn-dom[name]['root'].offsetTop+body.scrollTop) / objHeight);
+        console.log(name,x,y);
+    };
+    /*
+    box.updateFace = function(xIn,yIn) {
+        if (xIn > 210 || xIn < 30) {
+            return;
+        }
+        if (yIn > 210 || yIn < 30) {
+            return;
+        }
 
-        var padding = 2+8,
-            innerPadding = 6,
-            numCols = faceTypes[typePtr]['numCols'],
-            numRows = faceTypes[typePtr]['numRows'],
+        var objCount = 0,
+            numRows = faceTypes[typePtr]['numRows'], 
+            numCols = faceTypes[typePtr]['numCols'], 
             objWidth = faceWidth/numCols,
-            objHeight = faceHeight/numRows;
+            objHeight = faceHeight/numRows,
+        // figure out position from mousePosition
+            x = Math.floor((xIn-face.offsetLeft+body.scrollLeft) / objWidth),
+            y = Math.floor((yIn-face.offsetTop+body.scrollTop) / objHeight);
 
-        console.log('box.setFaceType',typePtr,faceObjArr,faceTypes,numCols,numRows);
-
-        /* set sizes of face objs */
-        forEachFaceItem(faceObjArr,numRows,numCols,
-                function(item) {
-                    item.style.width = objWidth-padding+'px';
-                    item.style.height = objHeight-padding+'px';
-                    item.className = type+' face-obj';
-                });
-        forEachFaceItem(faceObjTextArr,numRows,numCols,
-                function(item) {
-                    item.style.width = objWidth-padding-innerPadding+'px';
-                    item.style.height = objHeight-padding-innerPadding+'px';
-                    item.className = 'inner-'+type+' inner-face-obj';
-                });
+        // calculate index based on position
+        var index = x+(3*y);
+        console.log(box.getFaceObjText(index));
+        this.setFace(box.getFaceObjText(index),box.docs);
     };
+    */
+    /*
+    box.getFaceObjText = function(index) {
+        return faceObjTextArr[index].innerHTML;
+    }
+    */
 };
 Toi.modules.database = function(box) {
     box.docs = {};
@@ -191,7 +247,7 @@ Toi.modules.process = function(box) {
         }
     }
 
-    box.calcPartialHood = function(obj, array, hoodSize) {
+    function calcPartialHood(obj, array, hoodSize) {
         //console.log('calcHood begin', obj, array, array.length);
         var pairs = _.pairs(obj);
         var sortedPairs = _.sortBy(pairs, function(innerEl, innerI, innerList) {
@@ -207,12 +263,12 @@ Toi.modules.process = function(box) {
             array[i] = sortedPairs[i-currentLength][0];
         }
         //console.log('calcHood end', obj, array, array.length);
-    };
-    box.calcCompleteHood = function(docs, atom, firstType, secondType, targetSize) {
+    }
+    function calcCompleteHood(docs, atom, firstType, secondType, targetSize) {
 
         var firstObj = atom[firstType+'s'];
         var firstArr = atom[firstType+'hood'];
-        this.calcPartialHood(firstObj,firstArr, targetSize);
+        calcPartialHood(firstObj,firstArr, targetSize);
 
         var secondPointer = atom[secondType+'hood'][0];
         if (secondPointer === undefined) {
@@ -220,7 +276,7 @@ Toi.modules.process = function(box) {
         }
         var secondObj = getAtom(docs,secondPointer)[firstType+'s'];
         if (firstArr.length < targetSize) {
-            this.calcPartialHood(secondObj, firstArr, targetSize);
+            calcPartialHood(secondObj, firstArr, targetSize);
         }
 
         var thirdPointer = atom[secondType+'hood'][1];
@@ -229,7 +285,7 @@ Toi.modules.process = function(box) {
         }
         var thirdObj = getAtom(docs,thirdPointer)[firstType+'s'];
         if (firstArr.length < targetSize) {
-            this.calcPartialHood(thirdObj, firstArr, targetSize);
+            calcPartialHood(thirdObj, firstArr, targetSize);
         }
 
         var fourthPointer = atom[secondType+'hood'][2];
@@ -238,9 +294,9 @@ Toi.modules.process = function(box) {
         }
         var fourthObj = getAtom(docs,fourthPointer)[firstType+'s'];
         if (firstArr.length < targetSize) {
-            this.calcPartialHood(fourthObj, firstArr, targetSize);
+            calcPartialHood(fourthObj, firstArr, targetSize);
         }
-    };
+    }
     box.calcNeighborhoods = function(docs) {
         var that = this;
 
@@ -250,15 +306,15 @@ Toi.modules.process = function(box) {
 
         _.each(docs, function(atom, i, list) {
             //console.log('letter',atom['_id'], atom);    
-            that.calcCompleteHood(docs, atom, 'letter', 'letter', LETTERHOODSIZE);
+            calcCompleteHood(docs, atom, 'letter', 'letter', LETTERHOODSIZE);
         });
         _.each(docs, function(atom, i, list) {
             //console.log('word',atom['_id'], atom);    
-            that.calcCompleteHood(docs, atom, 'word', 'word', WORDHOODSIZE);
+            calcCompleteHood(docs, atom, 'word', 'word', WORDHOODSIZE);
         });
         _.each(docs, function(atom, i, list) {
             //console.log('paragraph',atom['_id'], atom);    
-            that.calcCompleteHood(docs, atom, 'paragraph', 'word', PARAGRAPHHOODSIZE);
+            calcCompleteHood(docs, atom, 'paragraph', 'word', PARAGRAPHHOODSIZE);
         });
 
         console.log('initial parse complete',docs);
@@ -291,7 +347,7 @@ Toi.modules.parse = function(box) {
         return 1/Math.pow(i,2);
     }
 
-    box.parseAlphabet = function(docs, letters) {
+    function parseAlphabet(docs, letters) {
         for (var i=0;i<letters.length;i++) {
             var thisLetter = letters[i];
             var thisAtom;
@@ -311,14 +367,14 @@ Toi.modules.parse = function(box) {
             //console.log('letters[i]', docs[letters[i]]);
         }
 
-    };
-    box.parseWordset = function(docs, words) {
+    }
+    function parseWordset(docs, words) {
 
         for (var i=0;i<words.length;i++) {
             var thisWord = words[i];
 
             // perform lower level processing
-            this.parseAlphabet(docs, thisWord); 
+            parseAlphabet(docs, thisWord); 
 
             // perform higher level processing
             // iterate through letters
@@ -343,14 +399,14 @@ Toi.modules.parse = function(box) {
                 }
             }
         }
-    };
+    }
     box.parseParagraphset = function(docs, paragraphs) {
 
         for (var i=0;i<paragraphs.length;i++) {
             var thisPara = paragraphs[i];
 
             // perform lower level processing
-            this.parseWordset(docs, thisPara); 
+            parseWordset(docs, thisPara); 
 
             // perform higher level processing
             // iterate through words
@@ -384,32 +440,31 @@ Toi.modules.parse = function(box) {
 Toi.modules.event = function(box) {
 };
 Toi.modules.ajax = function(box) {
-    box.makeRequest = function() {};
-    box.getResponse = function() {};
+    //box.makeRequest = function() {};
+    //box.getResponse = function() {};
 };
 Toi('*', function(box) {
     console.log(box,box.starter);
-    box.createFace();
-    box.setFaceType('letter');
+
     box.parseParagraphset(box.docs,box.starter);
     box.calcNeighborhoods(box.docs);
 
-    var frameMouseClickFunc = function(ev) {
+    var faceHammer = new Hammer(document.getElementsByClassName('face')[0]);
+    faceHammer.ontap = function(ev) {
         console.log(ev);
-        box.updateFace(ev.position[0].x,ev.position[0].y);
-    };
-    var frameMouseMoveFunc = function(ev) {
-        box.updateFace(ev.x,ev.y);
+        if (ev.position) {
+            box.updateDom('face',ev.position[0].x,ev.position[0].y);
+        }
     };
 
-    var hammer = new Hammer(document.getElementsByClassName('canvas')[0]);
-    hammer.ontap = frameMouseClickFunc;
-
-    function setContext(pointer) {
-        //setPointer(pointer); 
-        box.setFace(pointer,box.docs);
-    }
+    var miniBufferHammer = new Hammer(document.getElementsByClassName('mini-buffer')[0]);
+    miniBufferHammer.ontap = function(ev) {
+        console.log(ev);
+        if (ev.position) {
+            box.updateDom('mini-buffer',ev.position[0].x,ev.position[0].y);
+        }
+    };
 
     // initial state
-    setContext('toimawb');
+    box.initDom(box.docs);
 });
