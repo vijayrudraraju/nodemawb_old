@@ -12,24 +12,34 @@ p{word-wrap:break-word;margin:0}
 
 
 /* face elements */
-.face-obj{position:absolute;text-align:center;border:1px solid black;padding:1px 3px 7px 5px}
-.face-obj.letter{width:50px;height:50px;background:#500;font-size:36px;color:#eee}
-.face-obj.word{background:#050;font-size:18px;color:#eee}
-.face-obj.paragraph{background:#005;font-size:14px;color:#eee}
+.face-obj.outer{position:absolute;text-align:center;border:1px solid black;padding:1px 3px 7px 5px}
+.face-obj.outer.letter{width:50px;height:50px;background:#500;font-size:36px;color:#eee}
+.face-obj.outer.word{background:#050;font-size:18px;color:#eee}
+.face-obj.outer.paragraph{background:#005;font-size:14px;color:#eee}
 
-.inner-face-obj{padding:3px}
-.inner-face-obj.letter{background:#910000}
-.inner-face-obj.word{background:#009100}
-.inner-face-obj.paragraph{background:#000091}
+.face-obj.inner{padding:3px}
+.face-obj.inner.letter{background:#910000}
+.face-obj.inner.word{background:#009100}
+.obj.inner.paragraph{background:#000091}
 
 
 
 /* miniBuffer elements */
-.mini-buffer-obj{position:absolute;text-align:center;border:1px solid black}
-.mini-buffer-obj.letter{width:28px;height:28px}
+.mini-buffer-obj.outer{position:absolute;text-align:center;border:1px solid black}
+.mini-buffer-obj.outer.letter{width:28px;height:28px}
 
-.inner-mini-buffer-obj{}
-.inner-mini-buffer-obj.letter{padding:6px}
+.mini-buffer-obj.inner{padding:6px}
+.mini-buffer-obj.inner.letter{}
+
+
+
+/* toggles elements */
+.toggle-obj.outer{position:absolute;text-align:center;border:1px solid black;width:78px;height:28px;font-size:14px}
+.toggle-obj.outer.letter{left:0}
+.toggle-obj.outer.word{left:80px}
+.toggle-obj.outer.paragraph{right:0}
+
+.toggle-obj.inner{padding:6px}
 
 
 
@@ -41,13 +51,13 @@ p{word-wrap:break-word;margin:0}
 
 
 /* top level */
-.canvas{position:relative;clear:both;float:left;width:240px;height:240px;background:white}
-.corner{position:absolute;width:30px;height:30px;background:blue}
-.corner.bottom{background:lightBlue}
-.corner p{text-align:center;margin:5px}
-.mini-buffer{position:absolute;width:180px;height:30px;background:green;left:30px}
 .top{top:0}
 .bottom{bottom:0}
 .left{left:0}
 .right{right:0}
+
+.canvas{position:relative;clear:both;float:left;width:240px;height:240px;background:white}
+
 .face{position:relative;width:180px;height:180px;background:blue;top:30px;left:30px}
+.mini-buffer{position:absolute;width:240px;height:30px;background:green;left:0}
+.toggle{position:absolute;width:240px;height:30px;background:blue;left:0}

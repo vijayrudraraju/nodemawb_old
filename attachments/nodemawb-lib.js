@@ -60,6 +60,7 @@ Toi.modules.dom = function(box) {
     var body = document.getElementsByClassName('body')[0],
         face = document.getElementsByClassName('face')[0],
         miniBuffer = document.getElementsByClassName('mini-buffer')[0],
+        toggle = document.getElementsByClassName('toggle')[0],
         dom = {
             face:{
                      name:'face',
@@ -68,6 +69,7 @@ Toi.modules.dom = function(box) {
                      height:face.offsetHeight,
                      cellWidth:0,
                      cellHeight:0,
+                     currentSelection:'',
                      currentType:'letter',
                      types:{letter:{rows:3,cols:3},word:{rows:3,cols:2}},
                      rows:3,
@@ -83,20 +85,16 @@ Toi.modules.dom = function(box) {
                 height:miniBuffer.offsetHeight,
                 cellWidth:0,
                 cellHeight:0,
+                currentSelection:'',
                 currentType:'letter',
-                types:{letter:{rows:1,cols:6},word:{rows:1,cols:3}},
+                types:{letter:{rows:1,cols:8},word:{rows:1,cols:3}},
                 rows:1,
-                cols:6,
+                cols:8,
                 div:[],
                 p:[],
                 grid:[]
             }
         };
-
-    dom['face']['cellWidth'] = dom['face']['width']/dom['face']['cols'];
-    dom['face']['cellHeight'] = dom['face']['height']/dom['face']['rows'];
-    dom['mini-buffer']['cellWidth'] = dom['mini-buffer']['width']/dom['mini-buffer']['cols'];
-    dom['mini-buffer']['cellHeight'] = dom['mini-buffer']['height']/dom['mini-buffer']['rows'];
 
     function forEachCell(arr,rows,cols,func) {
         //console.log('forEachCell',arr,func);
@@ -128,7 +126,7 @@ Toi.modules.dom = function(box) {
         el.style.left = x+'px';
         el.style.top = y+'px';
         el.style.display = 'block';
-        el.className = name+'-obj '+type;
+        el.className = name+'-obj outer '+type;
     }
     function clearDiv(el) {
         el.style.left = 0;
@@ -138,13 +136,21 @@ Toi.modules.dom = function(box) {
 
     function setP(el, text, name, type) {
         el.innerHTML = text;
-        el.className = 'inner-'+name+'-obj '+type;
+        el.className = ''+name+'-obj inner '+type;
+    }
+    function getP(index, name) {
+        return dom[name]['p'][index].innerHTML;
     }
     function clearP(el) {
         el.innerHTML = '';
     }
 
     function populateGrid(domArrange) {
+        domArrange['cellWidth'] = domArrange['width']/domArrange['cols'];
+        domArrange['cellHeight'] = domArrange['height']/domArrange['rows'];
+        domArrange['cellWidth'] = domArrange['width']/domArrange['cols'];
+        domArrange['cellHeight'] = domArrange['height']/domArrange['rows'];
+
         domArrange['grid'].length = domArrange['rows']*domArrange['cols'];
         forEachCell(domArrange['grid'],domArrange['rows'],domArrange['cols'],function(item,row,col,index,thisArr){
             thisArr[index] = {x:col*domArrange['cellWidth'],y:row*domArrange['cellHeight']};
@@ -155,6 +161,9 @@ Toi.modules.dom = function(box) {
         domArrange['currentType'] = type;
     }
     function setDomArrangement(domArrange, type, pointer, data) {
+        if (Object.prototype.toString.call(type) === '[object Array]') {
+        }
+
         var numRows = domArrange['types'][type]['rows'], 
             numCols = domArrange['types'][type]['cols'], 
             objWidth = domArrange['width']/numCols,
@@ -177,18 +186,24 @@ Toi.modules.dom = function(box) {
                     setP(item,data[pointer][type+'hood'][calcIndex],domArrange['name'],type);
                 });
     }
+    function changeType(type,data) {
+        setDomArrangement(dom['face'], type, pointer, data);
+        setDomArrangement(dom['mini-buffer'], type, pointer, data);
+    }
     
 
 
-    box.initDom = function(data) {
+    function initDom(data) {
         populateGrid(dom['face']);
         populateGrid(dom['mini-buffer']);
+
         generateDomSet(dom['face']);
         generateDomSet(dom['mini-buffer']);
+
         setDomArrangement(dom['face'],'letter','toimawb',data);
         setDomArrangement(dom['mini-buffer'],'letter','toimawb',data);
-    };
-    box.updateDom = function(name,xIn,yIn) {
+    }
+    function updateDom(name,xIn,yIn,data) {
         //console.log(name,xIn,yIn);
         var type = dom[name]['currentType']; 
 
@@ -199,37 +214,14 @@ Toi.modules.dom = function(box) {
             // figure out position from mousePosition
             x = Math.floor((xIn-dom[name]['root'].offsetLeft+body.scrollLeft) / objWidth),
             y = Math.floor((yIn-dom[name]['root'].offsetTop+body.scrollTop) / objHeight);
+
         console.log(name,x,y);
-    };
-    /*
-    box.updateFace = function(xIn,yIn) {
-        if (xIn > 210 || xIn < 30) {
-            return;
-        }
-        if (yIn > 210 || yIn < 30) {
-            return;
-        }
-
-        var objCount = 0,
-            numRows = faceTypes[typePtr]['numRows'], 
-            numCols = faceTypes[typePtr]['numCols'], 
-            objWidth = faceWidth/numCols,
-            objHeight = faceHeight/numRows,
-        // figure out position from mousePosition
-            x = Math.floor((xIn-face.offsetLeft+body.scrollLeft) / objWidth),
-            y = Math.floor((yIn-face.offsetTop+body.scrollTop) / objHeight);
-
-        // calculate index based on position
-        var index = x+(3*y);
-        console.log(box.getFaceObjText(index));
-        this.setFace(box.getFaceObjText(index),box.docs);
-    };
-    */
-    /*
-    box.getFaceObjText = function(index) {
-        return faceObjTextArr[index].innerHTML;
+        console.log(getP(x+(y*numCols),name));
+        setDomArrangement(dom[name],type,getP(x+(y*numCols),name),data);
     }
-    */
+
+    box.initDom = initDom;
+    box.updateDom = updateDom;
 };
 Toi.modules.database = function(box) {
     box.docs = {};
@@ -453,16 +445,27 @@ Toi('*', function(box) {
     faceHammer.ontap = function(ev) {
         console.log(ev);
         if (ev.position) {
-            box.updateDom('face',ev.position[0].x,ev.position[0].y);
+            box.updateDom('face',ev.position[0].x,ev.position[0].y,box.docs);
         }
     };
-
     var miniBufferHammer = new Hammer(document.getElementsByClassName('mini-buffer')[0]);
     miniBufferHammer.ontap = function(ev) {
         console.log(ev);
         if (ev.position) {
-            box.updateDom('mini-buffer',ev.position[0].x,ev.position[0].y);
+            box.updateDom('mini-buffer',ev.position[0].x,ev.position[0].y,box.docs);
         }
+    };
+    var letterHammer = new Hammer(document.getElementsByClassName('toggle-obj letter')[0]);
+    letterHammer.ontap = function(ev) {
+        console.log(ev);
+    };
+    var wordHammer = new Hammer(document.getElementsByClassName('toggle-obj word')[0]);
+    wordHammer.ontap = function(ev) {
+        console.log(ev);
+    };
+    var paragraphHammer = new Hammer(document.getElementsByClassName('toggle-obj paragraph')[0]);
+    paragraphHammer.ontap = function(ev) {
+        console.log(ev);
     };
 
     // initial state
