@@ -49,35 +49,36 @@ function Toi() {
 };
 Toi.prototype = {
     name:'nodemawb',
-    starter:[['toimawb','is','a','typewriter','and','notebook'], ['toimawb', 'is', 'a', 'tool', 'for', 'introspection'], ['toimawb', 'finds', 'patterns', 'in', 'your', 'thoughts']],
     version:'0.1',
     getName:function() {
         return this.name;
     }
 };
+String.prototype.replaceAt = function(index, character) {
+    return this.substr(0,index) + character + this.substr(index+character.length);
+}
 Toi.modules = {};
 Toi.modules.dom = function(box) {
     var body = document.getElementsByClassName('body')[0],
         face = document.getElementsByClassName('face')[0],
+        buffer = document.getElementsByClassName('buffer')[0],
         miniBuffer = document.getElementsByClassName('mini-buffer')[0],
         toggle = document.getElementsByClassName('toggle')[0],
         dom = {
-            face:{
-                     name:'face',
-                     root:face,
-                     width:face.offsetWidth,
-                     height:face.offsetHeight,
-                     cellWidth:0,
-                     cellHeight:0,
-                     currentSelection:'',
-                     currentType:'letter',
-                     types:{letter:{rows:3,cols:3},word:{rows:3,cols:2}},
-                     rows:3,
-                     cols:6,
-                     div:[],
-                     p:[],
-                     grid:[]
-                 },
+            'face':{
+                name:'face',
+                root:face,
+                width:face.offsetWidth,
+                height:face.offsetHeight,
+                cellWidth:0,
+                cellHeight:0,
+                types:{letter:{rows:3,cols:3},word:{rows:3,cols:2}},
+                rows:3,
+                cols:6,
+                div:[],
+                p:[],
+                grid:[]
+            },
             'mini-buffer':{
                 name:'mini-buffer',
                 root:miniBuffer,
@@ -85,9 +86,8 @@ Toi.modules.dom = function(box) {
                 height:miniBuffer.offsetHeight,
                 cellWidth:0,
                 cellHeight:0,
-                currentSelection:'',
-                currentType:'letter',
                 types:{letter:{rows:1,cols:8},word:{rows:1,cols:3}},
+                selectedObjIndex:4,
                 rows:1,
                 cols:8,
                 div:[],
@@ -98,6 +98,7 @@ Toi.modules.dom = function(box) {
 
     function forEachCell(arr,rows,cols,func) {
         //console.log('forEachCell',arr,func);
+        // func takes item, row, col, index, array
         for (var i=0;i<rows;i++) {
             for (var j=0;j<cols;j++) {
                 func(arr[(i*cols)+j],i,j,(i*cols)+j,arr);
@@ -121,6 +122,17 @@ Toi.modules.dom = function(box) {
         }
     }
 
+    function selectEl(el) {
+        el.className += ' selected';
+    }
+    function deselectEl(el) {
+        var arr = el.className.split(' ');
+        for (var i=0;i<arr.length;i++) {
+            if (arr[0] !== 'selected') {
+                el.className += ' '+arr[0];
+            }
+        }
+    }
     function setDiv(el, x, y, name, type) {
         //console.log('arr',arr);
         el.style.left = x+'px';
@@ -133,12 +145,17 @@ Toi.modules.dom = function(box) {
         el.style.top = 0;
         el.style.display = 'none';
     }
-
-    function setP(el, text, name, type) {
-        el.innerHTML = text;
-        el.className = ''+name+'-obj inner '+type;
+    function selectP(el) {
+        el.className += 'selected';
     }
-    function getP(index, name) {
+    function setP(el, name, type) {
+        el.className = ''+name+'-obj inner inactive '+type;
+    }
+    function setPText(el, text) {
+        //console.log('debug',el, text);
+        el.innerHTML = text;
+    }
+    function getPText(index, name) {
         return dom[name]['p'][index].innerHTML;
     }
     function clearP(el) {
@@ -157,21 +174,15 @@ Toi.modules.dom = function(box) {
         });
     }
 
-    function setType(domArrange,type) {
-        domArrange['currentType'] = type;
-    }
-    function setDomArrangement(domArrange, type, pointer, data) {
-        if (Object.prototype.toString.call(type) === '[object Array]') {
-        }
-
-        var numRows = domArrange['types'][type]['rows'], 
+    function setDomArrangement(domArrange, stateArrange) {
+        var type = stateArrange['type'],
+            numRows = domArrange['types'][type]['rows'], 
             numCols = domArrange['types'][type]['cols'], 
             objWidth = domArrange['width']/numCols,
             objHeight = domArrange['height']/numRows;
         //console.log(objWidth,objHeight,domArrange['cellWidth'],domArrange['cellHeight']);
 
         clearDomSet(domArrange);
-        setType(domArrange,type);
 
         // set positions
         forEachCell(domArrange['div'],numRows,numCols,
@@ -179,34 +190,73 @@ Toi.modules.dom = function(box) {
                     // calc correspondance b/w cells and objs
                     //console.log(calcIndex,objWidth/domArrange['cellWidth'],objHeight/domArrange['cellHeight']);
                     setDiv(item,col*objWidth,row*objHeight,domArrange['name'],type);
+                    if (domArrange['selectedObjIndex'] === calcIndex) {
+                        selectEl(item);
+                    }
                 });
         // set text
         forEachCell(domArrange['p'],numRows,numCols,
                 function(item,row,col,calcIndex) {
-                    setP(item,data[pointer][type+'hood'][calcIndex],domArrange['name'],type);
+                    setP(item,domArrange['name'],type);
+                    if (domArrange['selectedObjIndex'] === calcIndex) {
+                        selectEl(item);
+                    }
                 });
     }
-    function changeType(type,data) {
-        setDomArrangement(dom['face'], type, pointer, data);
-        setDomArrangement(dom['mini-buffer'], type, pointer, data);
+    function setDomData(domArrange, stateArrange, data) {
+        //console.log('debug',domArrange);
+        var type = stateArrange['type'],
+            pointer = stateArrange['pointer'],
+            numRows = domArrange['types'][type]['rows'], 
+            numCols = domArrange['types'][type]['cols'];
+        // set text
+        forEachCell(domArrange['p'],numRows,numCols,
+                function(item,row,col,calcIndex) {
+                    setPText(item,data[pointer][type+'hood'][calcIndex]);
+                });
+    }
+    function setBufferData(domArrange,stateArrange,buffer) {
+        console.log('setBufferData',domArrange,stateArrange,buffer);
+        var type = stateArrange['type'],
+            scrollIndex = stateArrange['scrollIndex'],
+            bufferIndex = stateArrange['bufferIndex'],
+            numRows = domArrange['types'][type]['rows'], 
+            numCols = domArrange['types'][type]['cols'];
+        // set text
+        console.log('length',buffer[scrollIndex].length);
+        forEachCell(domArrange['p'],numRows,numCols,
+                function(item,row,col,idx) {
+                    console.log(idx,bufferIndex,buffer[scrollIndex].length);
+                    if (idx+bufferIndex-4 >= 0 && idx+bufferIndex-4 < buffer[scrollIndex].length) {
+                        setPText(item,buffer[scrollIndex][idx+bufferIndex-4]);
+                    } else {
+                        setPText(item,'');
+                    }
+                });
     }
     
 
 
-    function initDom(data) {
+    function initDom(data,buffer,state) {
         populateGrid(dom['face']);
         populateGrid(dom['mini-buffer']);
 
         generateDomSet(dom['face']);
         generateDomSet(dom['mini-buffer']);
 
-        setDomArrangement(dom['face'],'letter','toimawb',data);
-        setDomArrangement(dom['mini-buffer'],'letter','toimawb',data);
-    }
-    function updateDom(name,xIn,yIn,data) {
-        //console.log(name,xIn,yIn);
-        var type = dom[name]['currentType']; 
+        setDomArrangement(dom['face'],state['face']);
+        setDomArrangement(dom['mini-buffer'],state['mini-buffer']);
 
+        setDomData(dom['face'],state['face'],data);
+    }
+    function setDomType(data,state) {
+        setDomArrangement(dom['face'],state['face']);
+        setDomData(dom['face'],state['face'],data);
+    }
+    function setBufferType(data,state) {
+        setDomArrangement(dom['mini-buffer'],state['mini-buffer']);
+    }
+    function returnTriggeredData(name,type,xIn,yIn) {
         var numRows = dom[name]['types'][type]['rows'], 
             numCols = dom[name]['types'][type]['cols'], 
             objWidth = dom[name]['width']/numCols,
@@ -215,18 +265,100 @@ Toi.modules.dom = function(box) {
             x = Math.floor((xIn-dom[name]['root'].offsetLeft+body.scrollLeft) / objWidth),
             y = Math.floor((yIn-dom[name]['root'].offsetTop+body.scrollTop) / objHeight);
 
-        console.log(name,x,y);
-        console.log(getP(x+(y*numCols),name));
-        setDomArrangement(dom[name],type,getP(x+(y*numCols),name),data);
-    }
+        //console.log(name,x,y);
 
+        if (name === 'face') {
+            //console.log(getPText(x+(y*numCols),name));
+            return getPText(x+(y*numCols),name);
+        } else if (name === 'mini-buffer') {
+            if (x < 4) {
+                return -1;
+            } else if (x > 4) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+    }
+    function updateDom(data,state) {
+        setDomData(dom['face'],state['face'],data);
+    }
+    function updateBuffer(buffer,state) {
+        setBufferData(dom['mini-buffer'],state['mini-buffer'],buffer);
+        //setPText(dom['mini-buffer']['p'][dom['mini-buffer']['selectedObjIndex']],state['mini-buffer']['pointer']);            
+        console.log('updateBuffer',state);
+    }
     box.initDom = initDom;
     box.updateDom = updateDom;
+    box.updateBuffer = updateBuffer;
+    box.returnTriggeredData = returnTriggeredData;
+    box.setDomType = setDomType;
+    box.setBufferType = setBufferType;
 };
 Toi.modules.database = function(box) {
     box.docs = {};
+    box.buffer = [['toimawb','is','a','typewriter','and','notebook'], ['toimawb', 'is', 'a', 'tool', 'for', 'introspection'], ['toimawb', 'finds', 'patterns', 'in', 'your', 'thoughts']],
+    box.scroll = [];
+    box.state = {
+        'face':{
+            index:0,
+            pointer:'toimawb',
+            type:'letter'
+        },
+        'mini-buffer':{
+            letterIndex:0,
+            wordIndex:0,
+            paragraphIndex:0,
+            bufferIndex:0,
+            scrollIndex:0,
+            pointer:'toimawb',
+            type:'letter'
+        },
+        'toggle':{
+            index:0
+        }
+    };
+
+    function setType(name,newType) {
+        box.state[name]['type'] = newType;
+    }
+    function getType(name) {
+        return box.state[name]['type'];
+    }
+    function setPointer(name,newPtr) {
+        box.state[name]['pointer'] = newPtr;
+    }
+    function transferPointerToBuffer() {
+        var shtr = box.state['mini-buffer'],
+            word = box.buffer[shtr['scrollIndex']];
+        box.buffer[shtr['scrollIndex']] = word.replaceAt(shtr['bufferIndex'],shtr['pointer']);
+    }
+    function getBufferIndex(name) {
+        return box.state[name]['bufferIndex'];
+    }
+    function setBufferIndex(name,newIdx) {
+        // newIdx is +1, 0, -1
+        var shtr = box.state['mini-buffer'],
+            word = box.buffer[shtr['scrollIndex']];
+
+        console.log('box.buffer',box.buffer,shtr['scrollIndex'],shtr['bufferIndex'],word,box.state['face']['pointer']);
+
+        if (!(shtr['bufferIndex']===0 && newIdx===-1) && 
+                !(shtr['bufferIndex']+1 > word.length  && newIdx===1)) {
+            shtr['bufferIndex'] += newIdx;
+        }
+
+        console.log('box.buffer',box.buffer);
+    }
+
+    box.setType = setType;
+    box.getType = getType;
+    box.setPointer = setPointer;
+    box.transferPointerToBuffer = transferPointerToBuffer;
+    box.getBufferIndex = getBufferIndex;
+    box.setBufferIndex = setBufferIndex;
 };
-Toi.modules.process = function(box) {
+Toi.modules.graph = function(box) {
     function createDoc(docs, atom) {
         docs[atom] = { _id:atom, letterhood:[], wordhood:[], paragraphhood:[], letters:{}, words:{}, paragraphs:{} };    
         return docs[atom];
@@ -436,38 +568,77 @@ Toi.modules.ajax = function(box) {
     //box.getResponse = function() {};
 };
 Toi('*', function(box) {
-    console.log(box,box.starter);
+    var faceHammer = new Hammer(document.getElementsByClassName('face')[0]),
+    miniBufferHammer = new Hammer(document.getElementsByClassName('mini-buffer')[0]),
+    letterHammer = new Hammer(document.getElementsByClassName('toggle-obj letter')[0]),
+    wordHammer = new Hammer(document.getElementsByClassName('toggle-obj word')[0]),
+    paragraphHammer = new Hammer(document.getElementsByClassName('toggle-obj paragraph')[0]);
 
-    box.parseParagraphset(box.docs,box.starter);
+
+
+    console.log(box,box.buffer);
+    box.parseParagraphset(box.docs,box.buffer);
     box.calcNeighborhoods(box.docs);
 
-    var faceHammer = new Hammer(document.getElementsByClassName('face')[0]);
+
+
     faceHammer.ontap = function(ev) {
         console.log(ev);
         if (ev.position) {
-            box.updateDom('face',ev.position[0].x,ev.position[0].y,box.docs);
+            box.setPointer('face',
+                box.returnTriggeredData('face',
+                    box.getType('face'),
+                    ev.position[0].x,ev.position[0].y)
+                );
+            box.setPointer('mini-buffer',
+                box.returnTriggeredData('face',
+                    box.getType('face'),
+                    ev.position[0].x,ev.position[0].y)
+                );
+            box.transferPointerToBuffer();
+            box.updateDom(box.docs,box.state);
+            box.updateBuffer(box.buffer,box.state);
         }
     };
-    var miniBufferHammer = new Hammer(document.getElementsByClassName('mini-buffer')[0]);
+
     miniBufferHammer.ontap = function(ev) {
         console.log(ev);
+        var triggeredData = 0;
         if (ev.position) {
-            box.updateDom('mini-buffer',ev.position[0].x,ev.position[0].y,box.docs);
+            triggeredData = box.returnTriggeredData('mini-buffer',
+                    box.getType('mini-buffer'),
+                    ev.position[0].x,ev.position[0].y); 
+            box.setBufferIndex('mini-buffer',triggeredData);
+            box.updateBuffer(box.buffer,box.state);
         }
     };
-    var letterHammer = new Hammer(document.getElementsByClassName('toggle-obj letter')[0]);
+
+
+
     letterHammer.ontap = function(ev) {
         console.log(ev);
+        if (ev.position) {
+            box.setType('face','letter');
+            box.setType('mini-buffer','letter');
+            box.setDomType(box.docs,box.state);
+            box.setBufferType(box.docs,box.state);
+        }
     };
-    var wordHammer = new Hammer(document.getElementsByClassName('toggle-obj word')[0]);
     wordHammer.ontap = function(ev) {
         console.log(ev);
+        if (ev.position) {
+            box.setType('face','word');
+            box.setType('mini-buffer','word');
+            box.setDomType(box.docs,box.state);
+            box.setBufferType(box.docs,box.state);
+        }
     };
-    var paragraphHammer = new Hammer(document.getElementsByClassName('toggle-obj paragraph')[0]);
     paragraphHammer.ontap = function(ev) {
         console.log(ev);
     };
 
+
+
     // initial state
-    box.initDom(box.docs);
+    box.initDom(box.docs,box.buffer,box.state);
 });
