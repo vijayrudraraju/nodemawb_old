@@ -7,7 +7,7 @@ Toi('*', function(box) {
     wordHammer = new Hammer(document.getElementsByClassName('toggle-obj word')[0]),
     paragraphHammer = new Hammer(document.getElementsByClassName('toggle-obj paragraph')[0]);
 
-
+    var controlSlider = document.getElementsByClassName('control')[0].getElementsByTagName('input')[0];
 
     console.log(box,box.buffer);
     /*
@@ -16,16 +16,25 @@ Toi('*', function(box) {
     box.calcNeighborhoods(box.docs);
     */
 
-
+    controlSlider.onchange = function(ev) {
+        console.log(this.value);
+        box.setDataAtGazeIdx(this.value);
+        box.setDomState(box.getDomState('face'),box.getGaze());
+    };
 
     faceHammer.ontap = function(ev) {
         console.log(ev,ev.position);
         if (ev && ev.position) {
             // get user command index
-            box.returnIndexAtFacePos(ev.position[0].x,ev.position[0].y);
+            var commandIdx = box.returnIndexAtFacePos(ev.position[0].x,ev.position[0].y);
 
-            // set state based on user command index
-            box.get
+            // get state based on user command index
+            var gazeData = box.getDataAtGazeIdx(commandIdx);
+            var colorData = box.getDomState('face')['color'][commandIdx];
+            box.setIndex('face',commandIdx);
+            box.setControlState(gazeData,colorData);
+
+            // set controlState based on gazeData
             /*
             box.setPointer('face',
                 box.returnTriggeredData('face',

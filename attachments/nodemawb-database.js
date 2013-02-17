@@ -38,6 +38,18 @@ Toi.modules.database = function(box) {
     function getGaze() {
         return box.gaze;
     }
+    function getDataAtGazeIdx(idx) {
+        if (idx) {
+            return box.gaze[idx];
+        } else {
+            return box.state['face']['index'];
+        }
+    }
+    function setDataAtGazeIdx(data) {
+        box.gaze[box.state['face']['index']] = data;
+    }
+
+
 
     function addToBuffer() {
 
@@ -51,6 +63,9 @@ Toi.modules.database = function(box) {
     }
     function getType(name) {
         return box.state[name]['type'];
+    }
+    function setIndex(name,newIdx) {
+        return box.state[name]['index'] = newIdx; 
     }
     function setPointer(name,newPtr) {
         box.state[name]['pointer'] = newPtr;
@@ -102,6 +117,9 @@ Toi.modules.database = function(box) {
     box.initGazeState = initGazeState;
     box.initScrollState = initScrollState;
     box.getGaze = getGaze;
+    box.setIndex = setIndex;
+    box.getDataAtGazeIdx = getDataAtGazeIdx;
+    box.setDataAtGazeIdx = setDataAtGazeIdx;
 
     box.setType = setType;
     box.getType = getType;

@@ -83,8 +83,8 @@ Toi.modules.dom = function(box) {
         el.className = attrObj['name']+'-obj outer '+attrObj['type'];
     }
     function setDivState(el, attrObj) {
-        var lastCssSheet = document.styleSheets[document.styleSheets.length-1];
-        console.log(attrObj['speed']);
+        var lastCssSheet = document.styleSheets[0];
+        console.log(lastCssSheet,attrObj['speed'],attrObj['color']);
         if (attrObj['color']) {
             lastCssSheet.insertRule('@-webkit-keyframes '+attrObj['color']+'Frames{ from {background-color:black} to {background-color:'+attrObj['color']+'} }', lastCssSheet.cssRules.length);
             el.style.backgroundColor = attrObj['color'];
@@ -164,6 +164,9 @@ Toi.modules.dom = function(box) {
                 });
                 */
     }
+    function getDomState(name) {
+        return dom[name];
+    }
     function setDomState(domArrange,state) {
         console.log('setDomState',domArrange,state);
         var type = 'letter',
@@ -185,6 +188,11 @@ Toi.modules.dom = function(box) {
                         selectEl(item);
                     }
                 });
+    }
+    function setControlState(state,color) {
+        var el = document.getElementsByClassName('control')[0].getElementsByTagName('input')[0];
+        el.value = state;
+        document.getElementsByClassName('control')[0].style.backgroundColor = color;
     }
 
     function setDomData(domArrange, stateArrange, data) {
@@ -327,6 +335,9 @@ Toi.modules.dom = function(box) {
     box.initFace = initFace;
     box.initBuffer = initBuffer;
     box.returnIndexAtFacePos = returnIndexAtFacePos;
+    box.setControlState = setControlState;
+    box.setDomState = setDomState;
+    box.getDomState = getDomState;
 
     //box.updateDom = updateDom;
     //box.updateBuffer = updateBuffer;
