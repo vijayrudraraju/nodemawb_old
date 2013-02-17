@@ -1,13 +1,14 @@
 Toi('*', function(box) {
+    //subtractHammer = new Hammer(document.getElementsByClassName('subtract')[0]),
+    //letterHammer = new Hammer(document.getElementsByClassName('toggle-obj letter')[0]),
+    //wordHammer = new Hammer(document.getElementsByClassName('toggle-obj word')[0]),
+    //paragraphHammer = new Hammer(document.getElementsByClassName('toggle-obj paragraph')[0]);
+
     var faceHammer = new Hammer(document.getElementsByClassName('face')[0]),
     bufferHammer = new Hammer(document.getElementsByClassName('buffer')[0]),
-    subtractHammer = new Hammer(document.getElementsByClassName('subtract')[0]),
+    controlSlider = document.getElementsByClassName('control')[0].getElementsByTagName('input')[0],
     addHammer = new Hammer(document.getElementsByClassName('add')[0]),
-    letterHammer = new Hammer(document.getElementsByClassName('toggle-obj letter')[0]),
-    wordHammer = new Hammer(document.getElementsByClassName('toggle-obj word')[0]),
-    paragraphHammer = new Hammer(document.getElementsByClassName('toggle-obj paragraph')[0]);
-
-    var controlSlider = document.getElementsByClassName('control')[0].getElementsByTagName('input')[0];
+    subtractHammer = new Hammer(document.getElementsByClassName('subtract')[0]);
 
     console.log(box,box.buffer);
     /*
@@ -19,7 +20,9 @@ Toi('*', function(box) {
     controlSlider.onchange = function(ev) {
         console.log(this.value);
         box.setDataAtGazeIdx(this.value);
-        box.setDomState(box.getDomState('face'),box.getGaze());
+        box.setDataAtScrollIdx();
+        box.setFaceState(box.getGaze(),box.getState()['face']);
+        box.setSynthState(box.getGaze());
     };
 
     faceHammer.ontap = function(ev) {
@@ -33,6 +36,7 @@ Toi('*', function(box) {
             var colorData = box.getDomState('face')['color'][commandIdx];
             box.setIndex('face',commandIdx);
             box.setControlState(gazeData,colorData);
+            box.setFaceState(gazeData,box.getState()['face']);
 
             // set controlState based on gazeData
             /*
@@ -54,33 +58,54 @@ Toi('*', function(box) {
     };
     bufferHammer.ontap = function(ev) {
         console.log(ev);
-        var triggeredData = 0;
-        if (ev.position) {
+        if (ev && ev.position) {
+            /*
             triggeredData = box.returnTriggeredData('buffer',
                     box.getType('buffer'),
                     ev.position[0].x,ev.position[0].y); 
             box.setBufferIndex('buffer',triggeredData);
             box.updateBuffer(box.buffer,box.state);
             console.log('box.buffer',box.buffer);
+            */
+            // get user command index
+            var cmdIdx = box.returnIndexAtBufferPos(ev.position[0].x,ev.position[0].y);
+            // get state based on user command index
+            var scrollData = box.getDataAtScrollIdx(cmdIdx);
+            box.setGazeToScrollIdx(cmdIdx);
+            // set buffer state
+            box.setIndex('buffer',cmdIdx);
+            box.setIndex('face',0);
+            box.setFaceState(scrollData,box.getState()['face']);
+            box.setBufferState(scrollData,box.getState()['buffer']);
+
+            box.setSynthState(box.getGaze());
+
+            console.log(cmdIdx,scrollData);
         }
     };
 
 
     addHammer.ontap = function(ev) {
         console.log(ev);
-        if (ev.position) {
-            box.addToBuffer();
+        if (ev) {
+            var newAmp = parseInt(box.addToBuffer()*255/100);
+            console.log(newAmp);
+            document.getElementsByClassName('add')[0].style.backgroundColor = 'rgb('+newAmp+','+newAmp+','+newAmp+')';
+            document.getElementsByClassName('subtract')[0].style.backgroundColor = 'rgb('+newAmp+','+newAmp+','+newAmp+')';
         }
     };
     subtractHammer.ontap = function(ev) {
         console.log(ev);
-        if (ev.position) {
-            box.subtractFromBuffer();
+        if (ev) {
+            var newAmp = parseInt(box.subtractFromBuffer()*255/100);
+            console.log(newAmp);
+            document.getElementsByClassName('add')[0].style.backgroundColor = 'rgb('+newAmp+','+newAmp+','+newAmp+')';
+            document.getElementsByClassName('subtract')[0].style.backgroundColor = 'rgb('+newAmp+','+newAmp+','+newAmp+')';
         }
     };
 
 
-    letterHammer.ontap = function(ev) {
+    /*letterHammer.ontap = function(ev) {
         //console.log(ev);
         if (ev.position) {
             box.setType('face','letter');
@@ -105,7 +130,7 @@ Toi('*', function(box) {
     };
     paragraphHammer.ontap = function(ev) {
         console.log(ev);
-    };
+    };*/
 
 
 
@@ -115,13 +140,27 @@ Toi('*', function(box) {
     //box.initBuffer(box.docs,box.buffer,box.state);
     // sound
     var initialGaze = [
-        10,20,30,
-        40,50,60,
-        70,80,90
+        5,20,30,
+        50,20,70,
+        70,20,80,
+        100
     ];
     box.initGazeState(initialGaze);
     box.initScrollState(initialGaze);
+    //console.log('scroll',box.getScroll());
 
-    box.initFace(box.state,box.getGaze());
-    box.initBuffer(box.state);
+    //console.log('state',box.getState());
+    box.initFace(box.getState(),box.getGaze());
+    box.initBuffer(box.getState());
+    box.initControl(box.getGaze());
+
+    box.setGazeToScrollIdx(0);
+    box.setIndex('buffer',0);
+    box.setBufferState(box.getDataAtScrollIdx(0),box.getState()['buffer']);
+
+    addHammer.ontap({});
+    subtractHammer.ontap({});
+
+    box.startSound();
+    box.setSynthState(box.getGaze());
 });

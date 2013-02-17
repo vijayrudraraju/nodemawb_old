@@ -17,7 +17,7 @@ Toi.modules.dom = function(box) {
                 cols:6,
                 div:[],
                 p:[],
-                color:['blue','red','green','orange','purple','pink','coral','lightBlue','gold'],
+                color:['blue','blue','blue','orange','orange','orange','green','green','green'],
                 grid:[]
             },
             'buffer':{
@@ -68,12 +68,15 @@ Toi.modules.dom = function(box) {
         el.className += ' selected';
     }
     function deselectEl(el) {
+        //console.log('deselectEl', el.className);
         var arr = el.className.split(' ');
+        el.className = '';
         for (var i=0;i<arr.length;i++) {
-            if (arr[0] !== 'selected') {
-                el.className += ' '+arr[0];
+            if (arr[i] !== 'selected') {
+                el.className += ' '+arr[i];
             }
         }
+        //console.log('deselectEl', el.className);
     }
     //function setDiv(el, x, y, name, type, color) {
     function setDivArrange(el, attrObj) {
@@ -84,7 +87,7 @@ Toi.modules.dom = function(box) {
     }
     function setDivState(el, attrObj) {
         var lastCssSheet = document.styleSheets[0];
-        console.log(lastCssSheet,attrObj['speed'],attrObj['color']);
+        //console.log(lastCssSheet,attrObj['speed'],attrObj['color']);
         if (attrObj['color']) {
             lastCssSheet.insertRule('@-webkit-keyframes '+attrObj['color']+'Frames{ from {background-color:black} to {background-color:'+attrObj['color']+'} }', lastCssSheet.cssRules.length);
             el.style.backgroundColor = attrObj['color'];
@@ -167,14 +170,34 @@ Toi.modules.dom = function(box) {
     function getDomState(name) {
         return dom[name];
     }
-    function setDomState(domArrange,state) {
-        console.log('setDomState',domArrange,state);
+    function setFaceState(state,vizState) {
+        setDomState(dom['face'],state,vizState);
+    }
+    function setBufferState(state,vizState) {
+        var type = 'letter',
+            numRows = dom['buffer']['types'][type]['rows'], 
+            numCols = dom['buffer']['types'][type]['cols'], 
+            objWidth = dom['buffer']['width']/numCols,
+            objHeight = dom['buffer']['height']/numRows,
+            attrObj = {};
+        forEachCell(dom['buffer']['div'],numRows,numCols,
+                function(item,row,col,calcIndex,thisArr) {
+                    // calc correspondance b/w cells and objs
+                    if (vizState['index'] === calcIndex) {
+                        selectEl(item);
+                    } else {
+                        deselectEl(item);
+                    }
+                });
+    }
+    function setDomState(domArrange,state,vizState) {
+        //console.log('setDomState',domArrange,state,vizState);
         var type = 'letter',
             numRows = domArrange['types'][type]['rows'], 
             numCols = domArrange['types'][type]['cols'], 
             objWidth = domArrange['width']/numCols,
             objHeight = domArrange['height']/numRows,
-            attrObj = {x:0,y:0,name:'face',type:'letter',color:'lightGreen'};
+            attrObj = {};
 
         forEachCell(domArrange['div'],numRows,numCols,
                 function(item,row,col,calcIndex,thisArr) {
@@ -184,8 +207,10 @@ Toi.modules.dom = function(box) {
                         speed:state[calcIndex],
                     };
                     setDivState(item,attrObj);
-                    if (domArrange['selectedObjIndex'] === calcIndex) {
+                    if (vizState['index'] === calcIndex) {
                         selectEl(item);
+                    } else {
+                        deselectEl(item);
                     }
                 });
     }
@@ -257,7 +282,7 @@ Toi.modules.dom = function(box) {
         populateGrid(dom['face']);
         generateDomSet(dom['face']);
         setDomArrangement(dom['face'],state['face']);
-        setDomState(dom['face'],gazeState);
+        setDomState(dom['face'],gazeState,state['face']);
     }
     //function initBuffer(data,buffer,state) {
     function initBuffer(state,scrollState) {
@@ -266,6 +291,12 @@ Toi.modules.dom = function(box) {
         setDomArrangement(dom['buffer'],state['buffer']);
         //setBufferToBuffer(dom['buffer'],state['buffer'],buffer);
     }
+    function initControl(gazeState) {
+        var color = getDomState('face')['color'][0];
+        setControlState(gazeState,color);
+    }
+
+
     function setDomType(data,state) {
         setDomArrangement(dom['face'],state['face']);
         setDomData(dom['face'],state['face'],data);
@@ -287,6 +318,17 @@ Toi.modules.dom = function(box) {
         return x+(y*numCols);
     }
     function returnIndexAtBufferPos(xIn,yIn) {
+        var name = 'buffer',
+            type = 'letter',
+            numRows = dom[name]['types'][type]['rows'], 
+            numCols = dom[name]['types'][type]['cols'], 
+            objWidth = dom[name]['width']/numCols,
+            objHeight = dom[name]['height']/numRows,
+            // figure out index from mousePosition
+            x = Math.floor((xIn-dom[name]['root'].offsetLeft+body.scrollLeft) / objWidth),
+            y = Math.floor((yIn-dom[name]['root'].offsetTop+body.scrollTop) / objHeight);
+
+        return x+(y*numCols);
     }
     function returnTriggeredData(name,type,xIn,yIn) {
         var numRows = dom[name]['types'][type]['rows'], 
@@ -332,12 +374,19 @@ Toi.modules.dom = function(box) {
         setBufferToBuffer(dom['buffer'],state['buffer'],buffer);
         //console.log('updateBuffer',state);
     }
+
     box.initFace = initFace;
     box.initBuffer = initBuffer;
+    box.initControl = initControl;
+
     box.returnIndexAtFacePos = returnIndexAtFacePos;
+    box.returnIndexAtBufferPos = returnIndexAtBufferPos;
     box.setControlState = setControlState;
+
     box.setDomState = setDomState;
     box.getDomState = getDomState;
+    box.setFaceState = setFaceState;
+    box.setBufferState = setBufferState;
 
     //box.updateDom = updateDom;
     //box.updateBuffer = updateBuffer;
