@@ -24,17 +24,17 @@ p{word-wrap:break-word;margin:0}
 
 
 
-/* miniBuffer elements */
-.mini-buffer-obj.outer{position:absolute;text-align:center;border:1px solid black}
-.mini-buffer-obj.outer.letter{width:28px;height:28px}
-.mini-buffer-obj.outer.word{width:78px;height:28px}
-.mini-buffer-obj.outer.selected{width:24px;height:24px;border:3px solid yellow}
+/* buffer elements */
+.buffer-obj.outer{position:absolute;text-align:center;border:1px solid black}
+.buffer-obj.outer.letter{width:28px;height:28px}
+.buffer-obj.outer.word{width:78px;height:28px;font-size:10px}
+.buffer-obj.outer.selected{width:24px;height:24px;border:3px solid yellow}
 
-.mini-buffer-obj.inner{padding:6px}
-.mini-buffer-obj.inner.letter{width:16px;height:16px}
-.mini-buffer-obj.inner.word{width:66px;height:16px}
-.mini-buffer-obj.inner.inactive{background:white}
-.mini-buffer-obj.inner.selected{padding:3px;width:18px;height:18px}
+.buffer-obj.inner{padding:6px}
+.buffer-obj.inner.letter{width:16px;height:16px}
+.buffer-obj.inner.word{width:66px;height:16px}
+.buffer-obj.inner.inactive{background:white}
+.buffer-obj.inner.selected{padding:3px;width:18px;height:18px}
 
 
 
@@ -65,6 +65,15 @@ p{word-wrap:break-word;margin:0}
 
 .canvas{position:relative;clear:both;float:left;width:240px;height:240px;background:white}
 
+
+.subtract{position:absolute;width:14px;height:164px;top:30px;padding:8px;color:white;background:black}
+.add{position:absolute;width:14px;height:164px;top:30px;padding:8px;color:white;background:black}
+
 .face{position:relative;width:180px;height:180px;background:blue;top:30px;left:30px}
-.mini-buffer{position:absolute;width:240px;height:30px;background:green;left:0}
-.toggle{position:absolute;width:240px;height:30px;background:blue;left:0}
+.buffer{position:absolute;width:240px;height:30px;background:green}
+.toggle, .control{position:absolute;width:240px;height:30px;background:lightBlue}
+
+
+
+input[type='range']{width:200px;-webkit-appearance:none;padding-left:2px;padding-right:2px;-webkit-border-radius: 5px;  
+    background-image: -webkit-linear-gradient(top, #000000, #333333, #000000)}
