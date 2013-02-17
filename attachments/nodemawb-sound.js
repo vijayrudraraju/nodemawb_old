@@ -26,7 +26,7 @@ Toi.modules.sound = function(box) {
             mixes[i].connect(context.destination);
             oscillators[i].noteOn(0);
         }
-        console.log(oscillators,gains);
+        //console.log(oscillators,gains);
     }
     function stopSound() {
         var i;
@@ -48,14 +48,14 @@ Toi.modules.sound = function(box) {
     }
 
     function setSynthState(newState) {
-        console.log('setSynthState');
+        console.log('setSynthState',newState);
         var i;
         state = newState;
         for (i=0;i<3;i++) {
-            console.log(state[i+3],(state[i+3]-1)/(100-1));
+            //console.log(state[i+3],(state[i+3]-1)/(100-1));
             clearInterval(intervalIds[i]);
             oscillators[i].frequency.value = 110+(1650*(state[i]-1)/(100-1));
-            intervalIds[i] = setInterval(hit(i),400);
+            intervalIds[i] = setInterval(hit(i),2000*state[9]/100);
         }
         //console.log(intervalIds);
     }

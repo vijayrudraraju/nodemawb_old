@@ -10,7 +10,7 @@ Toi('*', function(box) {
     addHammer = new Hammer(document.getElementsByClassName('add')[0]),
     subtractHammer = new Hammer(document.getElementsByClassName('subtract')[0]);
 
-    console.log(box,box.buffer);
+    console.log(box);
     /*
     // language processing
     box.parseParagraphset(box.docs,box.buffer);
@@ -78,6 +78,10 @@ Toi('*', function(box) {
             box.setFaceState(scrollData,box.getState()['face']);
             box.setBufferState(scrollData,box.getState()['buffer']);
 
+            var tempo = box.getTempo()*255/100;
+            document.getElementsByClassName('add')[0].style.backgroundColor = 'rgb('+tempo+','+tempo+','+tempo+')';
+            document.getElementsByClassName('subtract')[0].style.backgroundColor = 'rgb('+tempo+','+tempo+','+tempo+')';
+
             box.setSynthState(box.getGaze());
 
             console.log(cmdIdx,scrollData);
@@ -86,21 +90,21 @@ Toi('*', function(box) {
 
 
     addHammer.ontap = function(ev) {
-        console.log(ev);
+        //console.log(ev);
         if (ev) {
             var newAmp = parseInt(box.addToBuffer()*255/100);
-            console.log(newAmp);
             document.getElementsByClassName('add')[0].style.backgroundColor = 'rgb('+newAmp+','+newAmp+','+newAmp+')';
             document.getElementsByClassName('subtract')[0].style.backgroundColor = 'rgb('+newAmp+','+newAmp+','+newAmp+')';
+            box.setSynthState(box.getGaze());
         }
     };
     subtractHammer.ontap = function(ev) {
-        console.log(ev);
+        //console.log(ev);
         if (ev) {
             var newAmp = parseInt(box.subtractFromBuffer()*255/100);
-            console.log(newAmp);
             document.getElementsByClassName('add')[0].style.backgroundColor = 'rgb('+newAmp+','+newAmp+','+newAmp+')';
             document.getElementsByClassName('subtract')[0].style.backgroundColor = 'rgb('+newAmp+','+newAmp+','+newAmp+')';
+            box.setSynthState(box.getGaze());
         }
     };
 
@@ -143,7 +147,7 @@ Toi('*', function(box) {
         5,20,30,
         50,20,70,
         70,20,80,
-        100
+        20
     ];
     box.initGazeState(initialGaze);
     box.initScrollState(initialGaze);
