@@ -20,6 +20,7 @@ Toi.modules.sound = function(box) {
         var i;
         for (i=0;i<3;i++) {
             oscillators[i].connect(gains[i]);
+            //oscillators[i].type = 1;
             gains[i].gain.value = 0.1;
             gains[i].connect(mixes[i]);
             mixes[i].gain.value = 0.3;
@@ -40,8 +41,18 @@ Toi.modules.sound = function(box) {
         return function() {
             var now = context.currentTime;
             //console.log('hit',i,state[i+3],gains[i]);
-            gains[i].gain.linearRampToValueAtTime((state[hitIdx+3]-1)/(100-1),now+0.2);
-            gains[i].gain.linearRampToValueAtTime(0.0, now+0.2+(state[hitIdx+6]*0.2/100));
+            oscillators[0].frequency.value = 10+(1650*(state[hitIdx]-1)/(100-1));
+            oscillators[1].frequency.value = 110+(1650*(state[hitIdx]-1)/(100-1));
+            oscillators[2].frequency.value = 510+(1650*(state[hitIdx]-1)/(100-1));
+
+            gains[0].gain.linearRampToValueAtTime((state[hitIdx+3]-1)/(100-1),now+0.2);
+            gains[0].gain.linearRampToValueAtTime(0.0, now+0.2+(state[hitIdx+6]*0.2/100));
+
+            gains[1].gain.linearRampToValueAtTime((state[hitIdx+3]-1)/(100-1),now+0.2);
+            gains[1].gain.linearRampToValueAtTime(0.0, now+0.2+(state[hitIdx+6]*0.2/100));
+
+            gains[2].gain.linearRampToValueAtTime((state[hitIdx+3]-1)/(100-1),now+0.2);
+            gains[2].gain.linearRampToValueAtTime(0.0, now+0.2+(state[hitIdx+6]*0.2/100));
             hitIdx++;
             hitIdx = hitIdx % 3;
         };
@@ -54,8 +65,8 @@ Toi.modules.sound = function(box) {
         for (i=0;i<3;i++) {
             //console.log(state[i+3],(state[i+3]-1)/(100-1));
             clearInterval(intervalIds[i]);
-            oscillators[i].frequency.value = 110+(1650*(state[i]-1)/(100-1));
-            intervalIds[i] = setInterval(hit(i),2000*state[9]/100);
+            //oscillators[i].frequency.value = 110+(1650*(state[i]-1)/(100-1));
+            intervalIds[i] = setInterval(hit(i),1000*state[9]/100);
         }
         //console.log(intervalIds);
     }

@@ -18,7 +18,7 @@ Toi('*', function(box) {
     */
 
     controlSlider.onchange = function(ev) {
-        console.log(this.value);
+        //console.log(this.value);
         box.setDataAtGazeIdx(this.value);
         box.setDataAtScrollIdx();
         box.setFaceState(box.getGaze(),box.getState()['face']);
@@ -77,6 +77,10 @@ Toi('*', function(box) {
             box.setIndex('face',0);
             box.setFaceState(scrollData,box.getState()['face']);
             box.setBufferState(scrollData,box.getState()['buffer']);
+
+            var gazeData = box.getDataAtGazeIdx(0);
+            var colorData = box.getDomState('face')['color'][0];
+            box.setControlState(gazeData,colorData);
 
             var tempo = box.getTempo()*255/100;
             document.getElementsByClassName('add')[0].style.backgroundColor = 'rgb('+tempo+','+tempo+','+tempo+')';
